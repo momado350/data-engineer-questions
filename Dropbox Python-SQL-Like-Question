@@ -1,0 +1,49 @@
+Percent of total Dropbox users who use Dropbox for free, that is never paid for any monthly subscription, using SQL JOIN condition
+
+* Output just the Percent of users. Round the value to 2 decimal places
+
+* names of columns should be Percent_users
+
+dim_users_dropbox_python
+user_id	user_name	user_since	gender
+1	Abra_Dotson	4/9/17	F
+ 
+fact_account_usage_dropbox_python
+activity_id	user_id	activity_date	upload_size	file_transfer_size
+10001	1	4/9/17	0	0.5
+ 
+fact_user_upgrades_dropbox_python
+upgrade_id	user_id	feature_name	upgrade_date
+1001	1	Professional	2/1/20
+
+
+Hint: you dont need to import pandas or any other library, instead use the dataframes above. Make sure to print final dataframe
+
+WITH paid_users AS (
+    SELECT DISTINCT user_id
+    FROM fact_user_upgrades_dropbox_python
+),
+
+total_users AS (
+    SELECT COUNT(*) AS total_user_count
+    FROM dim_users_dropbox_python
+),
+
+free_users AS (
+    SELECT COUNT(*) AS free_user_count
+    FROM dim_users_dropbox_python u
+    LEFT JOIN paid_users p ON u.user_id = p.user_id
+    WHERE p.user_id IS NULL
+)
+
+SELECT
+    ROUND(100.0 * f.free_user_count / t.total_user_count, 2) AS Percent_users
+FROM
+    total_users t, 
+    free_users f;
+
+
+- paid_users CTE (Common Table Expression): Selects all unique user IDs from the fact_user_upgrades_dropbox_python table, which identifies users who have paid for a subscription.
+- total_users CTE: Counts the total number of users from the dim_users_dropbox_python table.
+- free_users CTE: Counts the number of users who have never paid for a subscription by performing a LEFT JOIN between dim_users_dropbox_python and paid_users and selecting the rows where user_id from paid_users is NULL.
+- The final SELECT statement calculates the percentage of users who have never paid for a subscription by dividing the free_user_count by total_user_count and multiplying by 100. The result is rounded to two decimal places.
